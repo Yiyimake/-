@@ -1,0 +1,1321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>红影焕新 · 老照片修复台</title>
+<style>
+/* ============================================================
+   红影焕新 · 前端样式
+   配色：暗红 #8C1C13 / 米黄 #F5EBDC / 金 #C9A227 / 墨 #2B1B17
+   纯手写 CSS，无外部字体、无框架、无 CDN 依赖
+   ============================================================ */
+:root{
+  --red:#8C1C13; --red-2:#6E1410; --red-3:#3C0B08;
+  --gold:#C9A227; --gold-2:#B08B1E;
+  --cream:#F5EBDC; --paper:#FFFDF8; --bg1:#FDF7EC; --bg2:#F7EEE0;
+  --ink:#2B1B17; --mute:#9A8574; --line:#E7DAC8; --ok:#2E9E5B; --bad:#C0392B;
+  --shadow:0 8px 24px rgba(43,27,23,.06);
+  --shadow-lg:0 18px 44px rgba(43,27,23,.10);
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh; color:var(--ink);
+  font-family:"PingFang SC","Microsoft YaHei","Segoe UI","Source Han Sans SC",
+              system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(1100px 520px at 8% -12%, #FFF7EA 0%, rgba(255,247,234,0) 62%),
+    radial-gradient(900px 460px at 100% 0%, #FBF0DC 0%, rgba(251,240,220,0) 58%),
+    linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--red)}
+.hidden{display:none !important}
+.shell{max-width:1280px;margin:0 auto;padding:22px 26px 40px}
+
+/* ---------------- 顶部小条 ---------------- */
+.topbar{display:flex;align-items:center;gap:12px;padding:2px 2px 14px}
+.logo{
+  width:40px;height:40px;border-radius:12px;flex:0 0 auto;color:#FFF7EC;
+  background:linear-gradient(140deg,#A3241A,#5A0F0B);font-weight:800;font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 18px rgba(140,28,19,.22);
+}
+.topbar .name{font-weight:800;font-size:15px;letter-spacing:.4px}
+.topbar .sub{color:var(--mute);font-size:11.5px;margin-top:2px}
+.topbar .spacer{flex:1}
+.pill{
+  font-size:12px;color:#6B5544;background:#FFF9F0;border:1px solid var(--line);
+  border-radius:999px;padding:5px 12px;white-space:nowrap;
+}
+.pill .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;background:var(--bad)}
+.pill .dot.on{background:var(--ok);box-shadow:0 0 0 3px rgba(46,158,91,.14)}
+
+/* ---------------- hero ---------------- */
+.hero{
+  position:relative;overflow:hidden;border-radius:20px;padding:26px 32px 24px;margin-bottom:20px;
+  background:linear-gradient(135deg,#8C1C13 0%,#6E1410 56%,#3C0B08 100%);
+  box-shadow:0 16px 40px rgba(110,20,16,.24), inset 0 1px 0 rgba(255,255,255,.10);
+  color:#FFF7EC;
+}
+.hero::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+  background:linear-gradient(180deg,var(--gold),rgba(201,162,39,.12))}
+.hero::after{content:"";position:absolute;right:-70px;top:-90px;width:300px;height:300px;
+  border-radius:50%;background:radial-gradient(circle,rgba(201,162,39,.45) 0%,rgba(201,162,39,0) 68%)}
+.hero h1{margin:0 0 8px;font-size:29px;line-height:1.25;font-weight:800;letter-spacing:.6px}
+.hero p{margin:0;max-width:820px;color:#F2DAC6;font-size:14px;line-height:1.75}
+.hero .pills{margin-top:15px;display:flex;gap:9px;flex-wrap:wrap}
+.hero .tag{
+  font-size:12.5px;padding:4px 13px;border-radius:999px;color:#FFEAD6;
+  background:rgba(255,247,236,.13);border:1px solid rgba(255,247,236,.26);
+}
+
+/* ---------------- 主网格 ---------------- */
+.grid{display:grid;grid-template-columns:392px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1020px){.grid{grid-template-columns:1fr}}
+
+.card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow);
+}
+.card + .card{margin-top:16px}
+.step{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.step .num{
+  width:26px;height:26px;border-radius:9px;flex:0 0 auto;color:#FFF7EC;font-size:13px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(140deg,#A3241A,#7A1710);box-shadow:0 5px 12px rgba(140,28,19,.24);
+}
+.step .txt{font-size:16px;font-weight:800}
+.step .hint{font-size:12.5px;color:var(--mute)}
+.muted{color:var(--mute);font-size:12.5px;line-height:1.75}
+
+/* ---------------- 上传区 ---------------- */
+.drop{
+  display:block;width:100%;
+  border:1.6px dashed #DCC7A6;border-radius:15px;background:#FFFBF2;
+  padding:22px 18px;text-align:center;cursor:pointer;transition:.18s;position:relative;
+}
+.drop:hover,.drop.over{border-color:var(--gold);background:#FFF7E6}
+.drop.over{box-shadow:inset 0 0 0 1px rgba(201,162,39,.35)}
+.drop .ic{font-size:26px;line-height:1}
+.drop .t{margin-top:8px;font-size:14px;font-weight:700}
+.drop .d{margin-top:4px;font-size:12px;color:var(--mute)}
+.drop input[type=file]{display:none}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{
+  font-size:12px;padding:4px 11px;border-radius:8px;color:#6B5544;
+  background:#FFF6E6;border:1px solid #EEDFC8;
+  max-width:100%;overflow-wrap:anywhere;
+}
+.chip b{color:var(--red);font-weight:700}
+.chip.link{cursor:pointer;background:#FFFDF8;border-color:var(--line)}
+.chip.link:hover{border-color:var(--gold);color:var(--red)}
+
+/* ---------------- 表单 ---------------- */
+.group{margin-top:16px}
+.group:first-of-type{margin-top:6px}
+.glabel{
+  font-size:11.5px;letter-spacing:.6px;color:#A8907A;font-weight:800;
+  margin:0 0 9px;
+}
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field .lab{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:13px;font-weight:600;color:#5B4638;margin-bottom:7px}
+.field .lab .val{color:var(--red);font-weight:800;font-variant-numeric:tabular-nums}
+select,input[type=range]{width:100%}
+select{
+  appearance:none;padding:9px 32px 9px 12px;font-size:13.5px;color:var(--ink);
+  background:#FFFCF6 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' fill='none' stroke='%238A7565' stroke-width='1.6' stroke-linecap='round'/></svg>") no-repeat right 12px center;
+  border:1px solid #E3D3BC;border-radius:10px;outline:none;cursor:pointer;transition:.15s;
+}
+select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.14)}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;height:6px;border-radius:99px;
+  background:linear-gradient(90deg,var(--red) 0%,var(--red) var(--pct,50%),#EADFCF var(--pct,50%),#EADFCF 100%);
+  outline:none;cursor:pointer;margin:4px 0;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;
+  border:3px solid var(--red);box-shadow:0 2px 6px rgba(140,28,19,.28);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--red);cursor:pointer;
+}
+.check{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:#5B4638;
+  line-height:1.6;cursor:pointer;user-select:none}
+.check input{margin:2px 0 0;accent-color:var(--red);width:15px;height:15px;flex:0 0 auto}
+
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#FFF6E6;
+  border:1px solid #EEDFC8;border-radius:12px;padding:5px}
+.seg button{
+  border:0;background:transparent;border-radius:9px;padding:9px 6px;cursor:pointer;
+  font-size:12.5px;font-weight:700;color:#8A7565;font-family:inherit;transition:.16s;
+}
+.seg button:hover{color:var(--red)}
+.seg button.on{background:linear-gradient(140deg,#9C2318,#6E1410);color:#FFF7EC;
+  box-shadow:0 6px 14px rgba(140,28,19,.20)}
+
+.btn{
+  font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.4px;cursor:pointer;
+  border-radius:12px;padding:12px 18px;border:1px solid transparent;transition:.18s;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn.primary{
+  width:100%;color:#FFF7EC;border-color:var(--red-2);
+  background:linear-gradient(140deg,#9C2318,#6E1410);
+  box-shadow:0 10px 22px rgba(140,28,19,.22);
+}
+.btn.primary:hover:not(:disabled){transform:translateY(-1px);
+  background:linear-gradient(140deg,#7A1710,#5A0F0B);box-shadow:0 12px 26px rgba(140,28,19,.28)}
+.btn.primary:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;transform:none}
+.btn.ghost{background:#FFFBF1;border-color:#DFCEB4;color:#6B5544}
+.btn.ghost:hover{background:#FFF3DC;border-color:var(--gold);color:#4E0F0B}
+.btn.small{padding:9px 14px;font-size:12.5px}
+
+/* ---------------- 右侧：空状态 ---------------- */
+.guide{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.guide .item{background:#FFFCF6;border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-height:132px}
+.guide .ic{font-size:19px}
+.guide .t{font-size:13.5px;font-weight:800;margin:7px 0 4px}
+.guide .d{font-size:12.5px;color:var(--mute);line-height:1.65}
+.feature{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.feature .f{background:#FFF9F0;border:1px dashed #E4D3B8;border-radius:12px;padding:13px 15px}
+.feature .f b{display:block;color:#6E1410;font-size:13px;margin-bottom:3px}
+.feature .f span{color:#8A7565;font-size:12.5px;line-height:1.65}
+@media (max-width:1020px){.guide,.feature{grid-template-columns:1fr}}
+
+/* ---------------- 处理中 ---------------- */
+.busy{display:flex;flex-direction:column;gap:14px;align-items:center;padding:42px 20px}
+.spinner{
+  width:38px;height:38px;border-radius:50%;
+  border:3px solid #EFE2CE;border-top-color:var(--red);
+  animation:spin .9s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.busy .t{font-size:15px;font-weight:700}
+.busy .d{font-size:12.5px;color:var(--mute)}
+.bar{width:min(420px,80%);height:6px;border-radius:99px;background:#EFE2CE;overflow:hidden}
+.bar i{display:block;height:100%;width:35%;border-radius:99px;
+  background:linear-gradient(90deg,#C9A227,#8C1C13);animation:slide 1.3s ease-in-out infinite}
+@keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
+
+/* ---------------- 结果 ---------------- */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media (max-width:760px){.metrics{grid-template-columns:repeat(2,1fr)}}
+.metric{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:13px 16px;
+  box-shadow:var(--shadow)}
+.metric .k{font-size:12.5px;color:var(--mute)}
+.metric .v{margin-top:3px;font-size:23px;font-weight:800;color:var(--red);letter-spacing:.3px;
+  font-variant-numeric:tabular-nums}
+
+.tvtoggle{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+.tvtoggle button{
+  font-family:inherit;font-size:12.5px;font-weight:700;color:#8A7565;cursor:pointer;
+  background:#FFF6E6;border:1px solid #EEDFC8;border-radius:9px;padding:7px 13px;transition:.16s;
+}
+.tvtoggle button:hover{color:var(--red);border-color:#E0CDB0}
+.tvtoggle button.on{background:#FFF1DC;color:var(--red);border-color:var(--gold)}
+
+.stage{position:relative;background:#F4EBDD;border:1px solid var(--line);border-radius:14px;
+  padding:10px;display:flex;justify-content:center;overflow:hidden}
+.compare{position:relative;display:inline-block;line-height:0;max-width:100%;
+  border-radius:10px;overflow:hidden;box-shadow:var(--shadow-lg);cursor:col-resize;
+  user-select:none;touch-action:none}
+.compare img{display:block;max-width:100%;height:auto}
+.compare .clip{position:absolute;inset:0;width:50%;overflow:hidden}
+.compare .clip img{position:absolute;top:0;left:0;height:100%;max-width:none}
+.compare .divider{
+  position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;
+  background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.10);
+}
+.compare .knob{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:34px;height:34px;border-radius:50%;background:#fff;color:var(--red);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;
+  box-shadow:0 4px 14px rgba(0,0,0,.22);pointer-events:none;
+}
+.compare .tag{
+  position:absolute;top:10px;font-size:11.5px;font-weight:700;color:#fff;padding:3px 9px;
+  border-radius:7px;background:rgba(43,27,23,.55);backdrop-filter:blur(2px);line-height:1.5;
+}
+.compare .tag.l{left:10px}
+.compare .tag.r{right:10px}
+.stage.solo .clip,.stage.solo .divider{display:none}
+.stage.solo .compare .tag{display:none}
+.stage.solo .compare{cursor:default}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.actions .btn{flex:1 1 160px}
+
+details.info{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--paper);
+  padding:10px 14px}
+details.info summary{cursor:pointer;font-size:13px;font-weight:700;color:#5B4638;outline:none}
+details.info pre{margin:10px 0 0;padding:12px;background:#FFF9F0;border-radius:9px;
+  font-size:11.5px;line-height:1.6;color:#5B4638;overflow:auto;max-height:320px;white-space:pre-wrap}
+
+/* ---------------- 红色故事 · 知识库 ---------------- */
+.kb-note{
+  background:#FFF9F0;border:1px solid #EEDFC8;border-radius:11px;
+  padding:10px 13px;font-size:12.5px;color:#6B5544;line-height:1.75;
+}
+.kb-note b{color:var(--red)}
+.kb-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.kb-mini{font-weight:400;color:#A8907A;font-size:11.5px;letter-spacing:0}
+.kb-searchrow{display:flex;gap:8px}
+.kb-searchrow input{
+  flex:1;min-width:0;padding:9px 12px;font-size:13px;color:var(--ink);font-family:inherit;
+  border:1px solid #E3D3BC;border-radius:10px;background:#FFFCF6;outline:none;transition:.15s;
+}
+.kb-searchrow input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.14)}
+.passages{margin:0;padding-left:20px;font-size:12.5px;color:#5B4638;line-height:1.8}
+.passages li{margin-bottom:7px}
+.passages li b{color:var(--red)}
+.passages li .k{color:#A8907A;font-size:11.5px;margin-left:4px}
+.passages li button{
+  margin-left:6px;border:1px solid #E0CDB0;background:#FFFBF1;color:#6E1410;
+  font-size:11.5px;border-radius:7px;padding:1px 8px;cursor:pointer;font-family:inherit;
+}
+.passages li button:hover{background:#FFF2D8;border-color:var(--gold)}
+.story{
+  background:#FFFDF8;border:1px solid var(--line);border-radius:12px;
+  padding:14px 16px;font-size:13.5px;line-height:1.95;color:#3A2A22;white-space:pre-wrap;
+}
+.kb-badge{
+  display:inline-block;margin-left:6px;font-size:11.5px;font-weight:700;
+  padding:2px 9px;border-radius:999px;background:#FFF1DC;color:#8C1C13;border:1px solid #EDD9B4;
+}
+.kb-badge.llm{background:#EAF7EE;color:#1F7A46;border-color:#BFE3CC}
+.cand{
+  background:#FFF6E6;border:1px solid #EEDFC8;border-radius:9px;padding:4px 11px;
+  font-size:12px;color:#6B5544;cursor:pointer;transition:.15s;
+}
+.cand:hover{border-color:var(--gold);background:#FFF2D8}
+.cand b{color:var(--red)}
+
+/* ---------------- 页脚 / 提示 ---------------- */
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  text-align:center;color:#B09A85;font-size:12px;letter-spacing:.3px}
+#toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  background:#2B1B17;color:#FFF7EC;font-size:13px;padding:11px 18px;border-radius:11px;
+  box-shadow:0 14px 34px rgba(43,27,23,.28);transition:.22s;max-width:min(560px,90vw);z-index:50;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.err{background:#8C1C13}
+.banner{
+  background:#FFF3DC;border:1px solid #E6CE9E;color:#6E1410;border-radius:12px;
+  padding:12px 16px;font-size:13px;line-height:1.7;margin-bottom:16px;
+}
+.banner code{background:#FFFBF1;border:1px solid #EEDFC8;border-radius:5px;padding:1px 6px}
+.banner input{
+  font-family:inherit;font-size:13px;padding:7px 11px;margin:0 8px;
+  border:1px solid #E0CDB0;border-radius:9px;background:#FFFDF8;outline:none;width:180px;
+}
+.banner input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.14)}
+.banner .btn{padding:7px 14px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ===================== 顶栏 ===================== -->
+  <div class="topbar">
+    <div class="logo">红</div>
+    <div>
+      <div class="name">红影焕新</div>
+      <div class="sub">红色老照片数字活化 · 修复台</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="pill" id="pillGpu"><span class="dot"></span><span>正在检测环境…</span></div>
+    <div class="pill" id="pillModels"><span class="dot"></span><span>权重 …</span></div>
+    <div class="pill" id="pillKb"><span class="dot"></span><span>知识库 …</span></div>
+  </div>
+
+  <div class="banner hidden" id="offline">
+    服务暂时没有响应，请稍后刷新重试；如果一直这样，请联系部署者。
+  </div>
+
+  <div class="banner hidden" id="tokenBar">
+    这个服务启用了访问口令：
+    <input id="tokenInput" type="text" placeholder="输入口令" autocomplete="off">
+    <button id="tokenBtn" class="btn small">确定</button>
+  </div>
+
+  <!-- ===================== hero ===================== -->
+  <header class="hero">
+    <h1>红影焕新 · 老照片修复台</h1>
+    <p>Real-ESRGAN 放大补细节，DeOldify 还原年代色彩。只做画质修复、不改史实；
+       上色只补色度，亮度始终取原图。</p>
+    <div class="pills">
+      <span class="tag">🔍 超分 ×1–×4</span>
+      <span class="tag">🎨 黑白上色</span>
+      <span class="tag">⚡ GPU 加速</span>
+    </div>
+  </header>
+
+  <!-- ===================== 主体 ===================== -->
+  <div class="grid">
+
+    <!-- ---------- 左：上传 + 设置 ---------- -->
+    <div>
+      <section class="card">
+        <div class="step"><span class="num">1</span><span class="txt">上传照片</span>
+          <span class="hint">黑白 / 泛黄 / 彩色</span></div>
+
+        <label class="drop" id="drop">
+          <input type="file" id="fileInput"
+                 accept=".jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff,image/*">
+          <div class="ic">📤</div>
+          <div class="t">点击选择，或把照片拖到这里</div>
+          <div class="d">JPG / PNG / WEBP / BMP / TIFF</div>
+          <div class="d" style="margin-top:2px">也可以直接 Ctrl+V 粘贴</div>
+        </label>
+
+        <div class="chips hidden" id="fileChips"></div>
+      </section>
+
+      <section class="card">
+        <div class="step"><span class="num">2</span><span class="txt">处理设置</span></div>
+
+        <div class="field">
+          <div class="lab"><span>处理模式</span></div>
+          <div class="seg" id="modeSeg">
+            <button type="button" data-mode="both" class="on">超分 + 上色</button>
+            <button type="button" data-mode="up">只超分</button>
+            <button type="button" data-mode="color">只上色</button>
+          </div>
+        </div>
+
+        <div class="group" id="groupUp">
+          <div class="glabel">超分 Real-ESRGAN</div>
+          <div class="field">
+            <div class="lab"><span>超分模型</span></div>
+            <select id="esrModel"></select>
+          </div>
+          <div class="field">
+            <div class="lab"><span>输出倍数</span><span class="val" id="outscaleVal">×2</span></div>
+            <input type="range" id="outscale" min="1" max="4" step="1" value="2">
+          </div>
+          <div class="field">
+            <div class="lab"><span>分块边长</span><span class="val" id="tileVal">自动</span></div>
+            <input type="range" id="tile" min="0" max="5" step="1" value="0">
+          </div>
+          <label class="check"><input type="checkbox" id="half" checked>
+            <span>fp16 推理（仅 CUDA；出现色偏或黑块时关掉）</span></label>
+        </div>
+
+        <div class="group" id="groupColor">
+          <div class="glabel">上色 DeOldify</div>
+          <div class="field">
+            <div class="lab"><span>上色模型</span></div>
+            <select id="deoModel"></select>
+          </div>
+          <div class="field">
+            <div class="lab"><span>渲染倍数 render_factor</span>
+              <span class="val" id="rfVal">35</span></div>
+            <input type="range" id="rf" min="14" max="48" step="1" value="35">
+          </div>
+          <div class="field">
+            <div class="lab"><span>色彩强度</span><span class="val" id="strengthVal">0.90</span></div>
+            <input type="range" id="strength" min="0" max="1" step="0.05" value="0.9">
+          </div>
+          <label class="check"><input type="checkbox" id="postProcess" checked>
+            <span>亮度取上一步结果（官方后处理，最清晰）</span></label>
+        </div>
+
+        <div class="group">
+          <button class="btn primary" id="processBtn" disabled>开始处理</button>
+          <div class="muted" id="hintText" style="margin-top:10px">
+            首次处理会略慢一些，之后每张只需几秒。
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="glabel" style="margin-bottom:10px">环境状态</div>
+        <div class="muted" id="envBox">正在检测…</div>
+      </section>
+    </div>
+
+    <!-- ---------- 右：预览 / 结果 ---------- -->
+    <div>
+      <section class="card" id="emptyCard">
+        <div class="step"><span class="num">3</span><span class="txt">处理结果</span>
+          <span class="hint">上传后这里会出现对比图</span></div>
+        <div class="guide">
+          <div class="item"><div class="ic">📤</div>
+            <div class="t">① 上传一张照片</div>
+            <div class="d">黑白、泛黄、彩色都能处理；越大越慢，建议先拿中等尺寸试。</div></div>
+          <div class="item"><div class="ic">🛠️</div>
+            <div class="t">② 选择处理方式</div>
+            <div class="d">只超分、只上色，或者「先超分再上色」一条龙——推荐最后这种。</div></div>
+          <div class="item"><div class="ic">↔️</div>
+            <div class="t">③ 拖动对比并下载</div>
+            <div class="d">拖动中间分割线看前后差异，PNG 无损或 JPG 小体积随便存。</div></div>
+        </div>
+        <div class="feature">
+          <div class="f"><b>⚡ GPU 加速</b>
+            <span>模型跑在显卡上，一张老照片通常几秒内出结果。</span></div>
+          <div class="f"><b>🛡️ 不改史实</b>
+            <span>只补细节和色度，不重绘人脸、不按语义瞎改颜色。</span></div>
+          <div class="f"><b>🎯 可复现</b>
+            <span>strict 加载官方权重（缺失 0 / 多余 0），同参数结果稳定。</span></div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="previewCard">
+        <div class="step"><span class="num">3</span><span class="txt">预览</span>
+          <span class="hint">确认无误就点左边的「开始处理」</span></div>
+        <div class="stage">
+          <img id="previewImg" alt="待处理的照片"
+               style="display:block;max-width:100%;border-radius:12px;box-shadow:var(--shadow-lg)">
+        </div>
+        <div class="chips" id="previewMeta" style="margin-top:12px"></div>
+      </section>
+
+      <section class="card hidden" id="busyCard">
+        <div class="busy">
+          <div class="spinner"></div>
+          <div class="t" id="busyTitle">正在处理照片…</div>
+          <div class="bar"><i></i></div>
+          <div class="d" id="busyDesc">正在处理，请稍候</div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="resultCard">
+        <div class="step"><span class="num">3</span><span class="txt">处理结果</span>
+          <span class="hint" id="chainText"></span></div>
+
+        <div class="metrics" id="metrics"></div>
+
+        <div class="tvtoggle" id="viewToggle">
+          <button type="button" data-view="split" class="on">↔️ 分割对比</button>
+          <button type="button" data-view="after">🖼️ 只看结果</button>
+          <button type="button" data-view="before">📷 只看原图</button>
+        </div>
+
+        <div class="stage" id="stage">
+          <div class="compare" id="compare">
+            <img id="afterImg" alt="处理结果">
+            <div class="clip" id="clip"><img id="beforeImg" alt="原图"></div>
+            <div class="divider" id="divider"><span class="knob">⇔</span></div>
+            <span class="tag l" id="tagL">原图</span>
+            <span class="tag r">结果</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn ghost" id="dlPng">⬇️ 下载 PNG（无损）</button>
+          <button class="btn ghost" id="dlJpg">⬇️ 下载 JPG（体积小）</button>
+          <button class="btn ghost" id="againBtn">🔁 重新处理</button>
+        </div>
+
+        <details class="info">
+          <summary>处理明细</summary>
+          <pre id="detailBox"></pre>
+        </details>
+      </section>
+
+      <!-- ===================== 红色故事 · 知识库 ===================== -->
+      <section class="card" id="storyCard">
+        <div class="step"><span class="num">4</span><span class="txt">红色故事</span>
+          <span class="hint">本地知识库检索 · 只引用库里史料</span></div>
+
+        <div class="kb-note" id="kbNote">知识库加载中…</div>
+
+        <div class="kb-actions">
+          <button class="btn ghost small" id="recognizeBtn" disabled>🔍 识别这张照片</button>
+          <span class="muted" id="recognizeHint">上传照片后可自动识别是哪件文物</span>
+        </div>
+        <div class="chips hidden" id="candidates"></div>
+
+        <div class="field" style="margin-top:14px">
+          <div class="lab"><span>或直接检索 / 选择文物</span></div>
+          <div class="kb-searchrow">
+            <input id="kbQuery" type="text" placeholder="例：遵义会议、南泥湾、泸定桥…">
+            <button class="btn small" id="kbSearchBtn">检索</button>
+          </div>
+          <select id="kbSelect" style="margin-top:8px">
+            <option value="">从知识库里选一件…</option>
+          </select>
+        </div>
+
+        <div id="passageBox" class="hidden">
+          <div class="glabel" style="margin-top:14px">
+            命中的史料 <span class="kb-mini">生成讲解时只允许引用这些</span>
+          </div>
+          <ol class="passages" id="passageList"></ol>
+        </div>
+
+        <div id="storyBox" class="hidden">
+          <div class="glabel" style="margin-top:14px">
+            讲解 <span class="kb-badge" id="storyMode"></span>
+          </div>
+          <div class="story" id="storyText"></div>
+          <div class="kb-actions" style="margin-top:12px">
+            <button class="btn ghost small" id="copyStory">复制讲解</button>
+            <button class="btn ghost small" id="regenBtn">重新生成</button>
+          </div>
+          <div class="muted" id="storyMeta" style="margin-top:10px"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer>红影焕新 · 红色老照片数字活化系统 · Real-ESRGAN + DeOldify</footer>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   红影焕新 · 前端逻辑
+   - 只依赖浏览器原生 API（fetch / FileReader / Canvas）
+   - 后端约定：GET /api/status、POST /api/process（JSON + base64 图片）
+   ============================================================ */
+const $  = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+const TILES = [0, 128, 192, 256, 384, 512];
+
+/* 访问口令：服务端用 --token 启动时才需要，从 ?t=口令 读，或页面上现输 */
+let TOKEN = new URLSearchParams(location.search).get("t") || "";
+
+function apiHeaders(extra) {
+  const h = Object.assign({}, extra || {});
+  if (TOKEN) h["X-Access-Token"] = TOKEN;
+  return h;
+}
+
+async function apiFetch(url, opts) {
+  const options = Object.assign({}, opts || {});
+  options.headers = apiHeaders(options.headers);
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    $("#tokenBar").classList.remove("hidden");
+    throw new Error("需要访问口令");
+  }
+  return res;
+}
+
+function bindTokenBar() {
+  const bar = $("#tokenBar");
+  if (!bar) return;
+  const apply = () => {
+    const v = ($("#tokenInput").value || "").trim();
+    if (!v) return;
+    TOKEN = v;
+    try {
+      const u = new URL(location.href);
+      u.searchParams.set("t", v);
+      history.replaceState(null, "", u);
+    } catch (e) { /* file:// 之类忽略 */ }
+    bar.classList.add("hidden");
+    loadStatus();
+    toast("口令已保存，本次会话有效");
+  };
+  $("#tokenBtn").addEventListener("click", apply);
+  $("#tokenInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") apply();
+  });
+}
+
+const state = {
+  file: null,
+  dataUrl: null,      // 原图 dataURL（对比用）
+  result: null,       // 结果 dataURL（PNG）
+  meta: null,         // 后端返回的信息
+  mode: "both",
+  view: "split",
+  ratio: 0.5,
+  busy: false,
+  status: null,
+};
+
+/* 右侧面板同一时刻只显示一个：空状态 / 预览 / 处理中 / 结果 */
+function showPanel(which) {
+  const map = {
+    empty: "#emptyCard", preview: "#previewCard",
+    busy: "#busyCard", result: "#resultCard",
+  };
+  Object.entries(map).forEach(([key, sel]) => {
+    $(sel).classList.toggle("hidden", key !== which);
+  });
+}
+
+/* ---------------- 小工具 ---------------- */
+let toastTimer = null;
+function toast(msg, isErr = false) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.classList.toggle("err", !!isErr);
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 3600);
+}
+function fmtKB(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
+  return (bytes / 1048576).toFixed(1) + " MB";
+}
+function paintRange(el) {
+  const min = +el.min, max = +el.max, v = +el.value;
+  const pct = max > min ? ((v - min) / (max - min)) * 100 : 50;
+  el.style.setProperty("--pct", pct + "%");
+}
+
+/* ---------------- 状态：权重 / GPU ---------------- */
+async function loadStatus() {
+  try {
+    const r = await apiFetch("/api/status", { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const st = await r.json();
+    if (!st.ok) throw new Error(st.error || "后端返回错误");
+    state.status = st;
+    renderStatus(st);
+    $("#offline").classList.add("hidden");
+    $("#tokenBar").classList.add("hidden");
+    return st;
+  } catch (e) {
+    const needToken = String(e.message).includes("口令");
+    if (!needToken) $("#offline").classList.remove("hidden");
+    $("#pillGpu").innerHTML =
+      `<span class="dot"></span><span>${needToken ? "需要访问口令" : "后端未连接"}</span>`;
+    $("#pillModels").classList.add("hidden");
+    $("#envBox").textContent = needToken
+      ? "服务启用了访问口令，请在页面顶部的输入框里填入口令。"
+      : "没能连上后端：" + e.message;
+    return null;
+  }
+}
+
+function renderStatus(st) {
+  const gpuName = st.gpu || (st.cuda ? "GPU" : "CPU");
+  $("#pillGpu").innerHTML =
+    `<span class="dot${st.cuda ? " on" : ""}"></span><span>${gpuName}</span>`;
+
+  const esrReady = (st.esr_models || []).filter(m => m.exists).length;
+  const deoReady = (st.deo_models || []).filter(m => m.exists).length;
+  $("#pillModels").innerHTML =
+    `<span class="dot${esrReady && deoReady ? " on" : ""}"></span>` +
+    `<span>超分 ${esrReady} · 上色 ${deoReady}</span>`;
+
+  $("#envBox").innerHTML =
+    `推理设备：${gpuName}<br>` +
+    `加速方式：${st.cuda ? "GPU" : "CPU"}　·　可用模型：超分 ${esrReady} 个 / 上色 ${deoReady} 个`;
+
+  fillSelect($("#esrModel"), st.esr_models || [], "实拍老照片首选");
+  fillSelect($("#deoModel"), st.deo_models || [], "色彩最饱满");
+
+  const noEsr = esrReady === 0;
+  const noDeo = deoReady === 0;
+  if (noEsr && noDeo) {
+    $("#processBtn").disabled = true;
+    $("#hintText").textContent = "两个模型都没有权重，先按下面提示放好 .pth。";
+  }
+  updateModeAvailability(noEsr, noDeo);
+}
+
+function fillSelect(sel, models, preferLabel) {
+  sel.innerHTML = "";
+  const usable = models.filter(m => m.exists);
+  const list = usable.length ? usable : models;
+  list.forEach((m, i) => {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = (m.label || m.id) + (m.exists ? "" : "（缺失）");
+    opt.disabled = !m.exists;
+    if (i === 0 && preferLabel) opt.title = preferLabel;
+    sel.appendChild(opt);
+  });
+  if (!list.length) {
+    const opt = document.createElement("option");
+    opt.textContent = "（没有可用权重）";
+    sel.appendChild(opt);
+  }
+}
+
+function updateModeAvailability(noEsr, noDeo) {
+  $$("#modeSeg button").forEach(b => {
+    const m = b.dataset.mode;
+    const blocked = (m === "up" && noEsr) || (m === "color" && noDeo) ||
+                    (m === "both" && (noEsr || noDeo));
+    b.disabled = blocked;
+    b.title = blocked ? "缺少对应权重" : "";
+    b.style.opacity = blocked ? .45 : 1;
+  });
+}
+
+/* ---------------- 文件选择 ---------------- */
+function acceptFile(file) {
+  if (!file) return;
+  if (!/^image\//.test(file.type) && !/\.(jpe?g|png|webp|bmp|tiff?)$/i.test(file.name)) {
+    toast("这不是图片文件：" + file.name, true);
+    return;
+  }
+  if (file.size > 64 * 1024 * 1024) {
+    toast("图片太大（>64MB），先压缩一下", true);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    state.file = file;
+    state.dataUrl = reader.result;
+    state.result = null;
+
+    $("#beforeImg").src = reader.result;
+    $("#afterImg").removeAttribute("src");
+    $("#clip").style.width = "50%";
+    $("#divider").style.left = "50%";
+    state.ratio = 0.5;
+
+    $("#previewImg").src = reader.result;
+    $("#previewMeta").innerHTML =
+      `<span class="chip">📄 <b>${escapeHtml(file.name)}</b></span>` +
+      `<span class="chip">体积 <b>${fmtKB(file.size)}</b></span>`;
+    showPanel("preview");
+
+    const img = new Image();
+    img.onload = () => {
+      state.meta = { srcW: img.naturalWidth, srcH: img.naturalHeight };
+      renderFileChips(img.naturalWidth, img.naturalHeight);
+      $("#previewMeta").innerHTML +=
+        `<span class="chip">尺寸 <b>${img.naturalWidth} × ${img.naturalHeight}</b></span>`;
+    };
+    img.src = reader.result;
+
+    renderFileChips(0, 0);
+    $("#processBtn").disabled = state.busy;
+    $("#recognizeBtn").disabled = !kbState.clipReady;
+    toast("已选择：" + file.name);
+  };
+  reader.onerror = () => toast("这个文件读不出来", true);
+  reader.readAsDataURL(file);
+}
+
+function renderFileChips(w, h) {
+  const f = state.file;
+  if (!f) return;
+  const box = $("#fileChips");
+  box.classList.remove("hidden");
+  box.innerHTML = `
+    <span class="chip">📄 <b>${escapeHtml(f.name)}</b></span>
+    ${w ? `<span class="chip">尺寸 <b>${w} × ${h}</b></span>` : ""}
+    <span class="chip">体积 <b>${fmtKB(f.size)}</b></span>
+    <span class="chip link" id="clearFile">✕ 换一张</span>`;
+  const clear = $("#clearFile");
+  if (clear) clear.onclick = () => {
+    state.file = null; state.dataUrl = null; state.result = null;
+    $("#fileInput").value = "";
+    box.classList.add("hidden");
+    $("#processBtn").disabled = true;
+    showPanel("empty");
+  };
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ---------------- 处理 ---------------- */
+let busyTimer = null, busyStart = 0;
+
+function setBusy(on, title, desc) {
+  state.busy = on;
+  if (on) {
+    showPanel("busy");
+    $("#processBtn").disabled = true;
+    $("#processBtn").textContent = "处理中…";
+    $("#busyTitle").textContent = title || "正在处理照片…";
+    $("#busyDesc").textContent = desc || "正在处理，请稍候";
+    busyStart = performance.now();
+    clearInterval(busyTimer);
+    busyTimer = setInterval(() => {
+      const s = ((performance.now() - busyStart) / 1000).toFixed(1);
+      $("#busyDesc").textContent = `已用时 ${s}s · 请稍候`;
+    }, 200);
+  } else {
+    clearInterval(busyTimer);
+    $("#processBtn").disabled = !state.dataUrl;
+    $("#processBtn").textContent = "开始处理";
+    showPanel(state.result ? "result" : (state.dataUrl ? "preview" : "empty"));
+  }
+}
+
+function collectParams() {
+  return {
+    mode: state.mode,
+    esr_model: $("#esrModel").value,
+    outscale: +$("#outscale").value,
+    tile: TILES[+$("#tile").value],
+    half: $("#half").checked,
+    deo_model: $("#deoModel").value,
+    render_factor: +$("#rf").value,
+    strength: +$("#strength").value,
+    post_process: $("#postProcess").checked,
+  };
+}
+
+async function processImage() {
+  if (state.busy) return;
+  if (!state.dataUrl) { toast("先上传一张照片", true); return; }
+  const params = collectParams();
+  const t0 = performance.now();
+
+  setBusy(true, "正在处理照片…",
+    params.mode === "both" ? "第一步 Real-ESRGAN 超分，第二步 DeOldify 上色" :
+    params.mode === "up" ? "Real-ESRGAN 超分中…" : "DeOldify 上色中…");
+
+  // 阶段提示靠估算，真实耗时以返回为准
+  const phaseTimer = setTimeout(() => {
+    if (params.mode === "both") $("#busyTitle").textContent = "正在上色…";
+  }, params.mode === "both" ? 9000 : 20000);
+
+  try {
+    const r = await apiFetch("/api/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: state.dataUrl, params }),
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || "处理失败");
+    state.result = data.image;
+    state.meta = { ...(state.meta || {}), ...data };
+    showResult(data);
+    toast(`完成，用时 ${data.took}s`);
+  } catch (e) {
+    toast("处理失败：" + e.message, true);
+  } finally {
+    clearTimeout(phaseTimer);
+    setBusy(false);
+    $("#processBtn").disabled = !state.dataUrl;
+  }
+}
+
+/* ---------------- 展示结果 ---------------- */
+function showResult(d) {
+  $("#afterImg").src = d.image;
+  if (state.dataUrl) $("#beforeImg").src = state.dataUrl;
+
+  showPanel("result");
+
+  const upscale = d.mode !== "color";
+  const color = d.mode !== "up";
+  const src = d.src || [0, 0];
+  let chain = `${src[0]}×${src[1]}`;
+  if (upscale) chain += ` → 超分 ×${d.outscale} → ${d.width}×${d.height}`;
+  if (color) chain += " → 上色";
+  $("#chainText").textContent = chain;
+
+  const metrics = [
+    ["输出尺寸", `${d.width}×${d.height}`],
+    ["总耗时", `${d.took}s`],
+    ["超分", upscale ? `×${d.outscale}` : "未做"],
+    ["色彩强度", color ? Number(d.strength).toFixed(2) : "—"],
+  ];
+  $("#metrics").innerHTML = metrics.map(
+    ([k, v]) => `<div class="metric"><div class="k">${k}</div><div class="v">${v}</div></div>`
+  ).join("");
+
+  $("#detailBox").textContent = JSON.stringify(
+    { mode: d.mode, params: d.params, steps: d.steps, src: d.src, out: [d.width, d.height] },
+    null, 2);
+
+  setView("split");
+  requestAnimationFrame(() => {
+    syncCompareWidth();
+    setRatio(0.5);
+  });
+}
+
+/* ---------------- 对比滑块 ---------------- */
+function syncCompareWidth() {
+  const after = $("#afterImg");
+  const before = $("#beforeImg");
+  if (!after.clientWidth) return;
+  before.style.width = after.clientWidth + "px";
+}
+
+function setRatio(r) {
+  state.ratio = Math.min(0.98, Math.max(0.02, r));
+  const pct = (state.ratio * 100).toFixed(2) + "%";
+  $("#clip").style.width = pct;
+  $("#divider").style.left = pct;
+  $("#tagL").style.opacity = state.ratio > 0.12 ? 1 : 0;
+}
+
+function setView(view) {
+  state.view = view;
+  $$("#viewToggle button").forEach(b => b.classList.toggle("on", b.dataset.view === view));
+  const stage = $("#stage");
+  const compare = $("#compare");
+  stage.classList.toggle("solo", view !== "split");
+  if (view === "split") {
+    compare.style.cursor = "col-resize";
+    setRatio(state.ratio);
+  } else if (view === "after") {
+    $("#clip").style.width = "0%";
+    $("#divider").style.left = "0%";
+  } else {
+    $("#clip").style.width = "100%";
+    $("#divider").style.left = "100%";
+  }
+}
+
+function bindCompare() {
+  const stage = $("#stage");
+  let dragging = false;
+
+  const ratioFromEvent = (e) => {
+    const rect = $("#afterImg").getBoundingClientRect();
+    if (!rect.width) return state.ratio;
+    return (e.clientX - rect.left) / rect.width;
+  };
+  const down = (e) => {
+    if (state.view !== "split") return;
+    dragging = true;
+    stage.setPointerCapture?.(e.pointerId);
+    setRatio(ratioFromEvent(e));
+    e.preventDefault();
+  };
+  const move = (e) => { if (dragging) setRatio(ratioFromEvent(e)); };
+  const up = () => { dragging = false; };
+
+  stage.addEventListener("pointerdown", down);
+  stage.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  window.addEventListener("resize", syncCompareWidth);
+  $("#afterImg").addEventListener("load", syncCompareWidth);
+  $("#beforeImg").addEventListener("load", syncCompareWidth);
+
+  // 键盘也能调：滑块容器获得焦点后左右键
+  $("#compare").tabIndex = 0;
+  $("#compare").addEventListener("keydown", (e) => {
+    if (state.view !== "split") return;
+    if (e.key === "ArrowLeft") { setRatio(state.ratio - 0.03); e.preventDefault(); }
+    if (e.key === "ArrowRight") { setRatio(state.ratio + 0.03); e.preventDefault(); }
+  });
+}
+
+/* ---------------- 下载 ---------------- */
+function stem() {
+  const n = state.file ? state.file.name : "photo";
+  return n.replace(/\.[^.]+$/, "") || "photo";
+}
+function downloadByName(dataUrl, name) {
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+function downloadPng() {
+  if (!state.result) { toast("还没有结果", true); return; }
+  downloadByName(state.result, stem() + "_fixed.png");
+}
+function downloadJpg() {
+  if (!state.result) { toast("还没有结果", true); return; }
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas");
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0);
+    downloadByName(c.toDataURL("image/jpeg", 0.95), stem() + "_fixed.jpg");
+  };
+  img.src = state.result;
+}
+
+/* ---------------- 事件绑定 ---------------- */
+function bindUI() {
+  // 上传
+  const drop = $("#drop");
+  $("#fileInput").addEventListener("change", (e) => acceptFile(e.target.files[0]));
+  ["dragenter", "dragover"].forEach(t => drop.addEventListener(t, (e) => {
+    e.preventDefault(); drop.classList.add("over");
+  }));
+  ["dragleave", "dragend", "drop"].forEach(t => drop.addEventListener(t, (e) => {
+    e.preventDefault(); drop.classList.remove("over");
+  }));
+  drop.addEventListener("drop", (e) => {
+    const f = e.dataTransfer?.files?.[0];
+    if (f) acceptFile(f);
+  });
+  // 防止拖到页面别处时浏览器直接打开图片
+  ["dragover", "drop"].forEach(t => window.addEventListener(t, (e) => e.preventDefault()));
+  // 粘贴
+  window.addEventListener("paste", (e) => {
+    const item = Array.from(e.clipboardData?.items || [])
+      .find(i => i.type && i.type.startsWith("image/"));
+    if (item) acceptFile(item.getAsFile());
+  });
+
+  // 模式
+  $$("#modeSeg button").forEach(b => b.addEventListener("click", () => {
+    if (b.disabled) return;
+    state.mode = b.dataset.mode;
+    $$("#modeSeg button").forEach(x => x.classList.toggle("on", x === b));
+    $("#groupUp").classList.toggle("hidden", state.mode === "color");
+    $("#groupColor").classList.toggle("hidden", state.mode === "up");
+  }));
+
+  // 视图
+  $$("#viewToggle button").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
+
+  // 滑杆
+  const outscale = $("#outscale");
+  outscale.addEventListener("input", () => {
+    paintRange(outscale);
+    $("#outscaleVal").textContent = "×" + outscale.value;
+  });
+  const tile = $("#tile");
+  tile.addEventListener("input", () => {
+    paintRange(tile);
+    const v = TILES[+tile.value];
+    $("#tileVal").textContent = v ? v + " px" : "自动";
+  });
+  const rf = $("#rf");
+  rf.addEventListener("input", () => {
+    paintRange(rf);
+    $("#rfVal").textContent = rf.value;
+  });
+  const st = $("#strength");
+  st.addEventListener("input", () => {
+    paintRange(st);
+    $("#strengthVal").textContent = (+st.value).toFixed(2);
+  });
+
+  // 处理 / 下载
+  $("#processBtn").addEventListener("click", processImage);
+  $("#againBtn").addEventListener("click", processImage);
+  $("#dlPng").addEventListener("click", downloadPng);
+  $("#dlJpg").addEventListener("click", downloadJpg);
+
+  [outscale, tile, rf, st].forEach(paintRange);
+}
+
+/* ============================================================
+   红色故事 · 知识库（检索 + 识别 + 受控生成）
+   接口：GET /api/kb/status | POST /api/kb/search | /api/kb/recognize | /api/kb/story
+   ============================================================ */
+const kbState = { entries: [], clipReady: false, last: null };
+
+async function loadKbStatus() {
+  try {
+    const r = await apiFetch("/api/kb/status", { cache: "no-store" });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "知识库不可用");
+    const kb = d.kb || {}, llm = d.llm || {}, clip = d.clip || {};
+    kbState.clipReady = clip.available !== false;
+    $("#pillKb").innerHTML =
+      `<span class="dot on"></span><span>知识库 ${kb.entries || 0} 条</span>`;
+
+    const llmLine = llm.available
+      ? `大模型：<b>${llm.provider} · ${escapeHtml(llm.model || "")}</b>`
+      : "大模型：未配置，使用<b>本地抽取</b>（只引用库里原文）";
+    const clipLine = clip.available === true
+      ? `图像识别：CLIP 可用（${escapeHtml(clip.model || "已加载")}）`
+      : clip.available === null
+        ? "图像识别：CLIP 已装，首次识别时加载模型"
+        : `图像识别：未启用 —— ${escapeHtml(clip.error || "缺少依赖")}`;
+
+    $("#kbNote").innerHTML =
+      `知识库 <b>${kb.entries || 0} 条</b>史料 / <b>${kb.passages || 0}</b> 个片段，` +
+      `检索方式 ${escapeHtml(kb.retrieval || "")}（${escapeHtml(kb.vector_backend || "")}）<br>` +
+      `${llmLine}<br>${clipLine}`;
+
+    kbState.entries = [];
+    fillKbSelect(kb.entries || []);
+    $("#recognizeBtn").disabled = !(kbState.clipReady && state.dataUrl);
+  } catch (e) {
+    $("#pillKb").innerHTML = '<span class="dot"></span><span>知识库未就绪</span>';
+    $("#kbNote").innerHTML =
+      `知识库没有加载成功：${escapeHtml(e.message)}<br>` +
+      `把 <code>redkb/</code> 目录放到本文件同级即可（里面要有 kb.jsonl）。`;
+  }
+}
+
+function fillKbSelect() {
+  // 直接拉列表：/api/kb/status 只给数量，条目清单走 /api/kb/list
+  apiFetch("/api/kb/list")
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) return;
+      kbState.entries = d.entries || [];
+      const sel = $("#kbSelect");
+      sel.innerHTML = '<option value="">从知识库里选一件…</option>' +
+        kbState.entries.map(e =>
+          `<option value="${e.id}">${escapeHtml(e.name)}（${escapeHtml(e.type || "")}）</option>`
+        ).join("");
+    })
+    .catch(() => { /* 后端没起来时忽略 */ });
+}
+
+async function kbSearch() {
+  const query = ($("#kbQuery").value || "").trim();
+  if (!query) { toast("先输入关键词", true); return; }
+  try {
+    const r = await apiFetch("/api/kb/search", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, top_k: 6 }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "检索失败");
+    if (!d.hits || !d.hits.length) {
+      toast("没检索到相关史料，换个说法试试", true);
+      $("#passageBox").classList.add("hidden");
+      return;
+    }
+    renderPassages(d.hits);
+    $("#storyBox").classList.add("hidden");
+    toast(`命中 ${d.hits.length} 条史料，点「以此讲解」`);
+  } catch (e) {
+    toast("检索失败：" + e.message, true);
+  }
+}
+
+async function kbStory({ entryId = "", query = "" } = {}) {
+  try {
+    const r = await apiFetch("/api/kb/story", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entry_id: entryId, query, top_k: 6 }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "生成失败");
+    kbState.last = { entryId: (d.entry && d.entry.id) || entryId, query };
+    renderPassages(d.passages || []);
+    renderStory(d.story || {}, d.entry || {});
+    if ((d.entry || {}).id) $("#kbSelect").value = d.entry.id;
+  } catch (e) {
+    toast("生成失败：" + e.message, true);
+  }
+}
+
+function kindLabel(kind) {
+  if (!kind) return "";
+  if (kind === "summary") return "概述";
+  if (kind === "tip") return "讲解要点";
+  if (kind.startsWith("fact")) return "史实 " + kind.slice(4);
+  return kind;
+}
+
+function renderPassages(list) {
+  const box = $("#passageBox"), ol = $("#passageList");
+  if (!list || !list.length) { box.classList.add("hidden"); return; }
+  ol.innerHTML = list.map((p) => {
+    const eid = p.entry_id || "";
+    return `<li><b>${escapeHtml(p.name || "")}</b>` +
+      `<span class="k">${escapeHtml(kindLabel(p.kind))}</span>　${escapeHtml(p.text || "")} ` +
+      `<button data-id="${eid}">以此讲解</button></li>`;
+  }).join("");
+  $$("#passageList button").forEach(btn => {
+    btn.onclick = () => kbStory({ entryId: btn.dataset.id });
+  });
+  box.classList.remove("hidden");
+}
+
+function renderStory(story, entry) {
+  const text = story.text || "";
+  $("#storyText").textContent = text;
+
+  const mode = story.mode === "llm" ? "大模型生成" : "本地抽取";
+  const badge = $("#storyMode");
+  badge.textContent = mode;
+  badge.className = "kb-badge" + (story.mode === "llm" ? " llm" : "");
+
+  const bits = [];
+  if (entry && entry.name) bits.push(`条目：${entry.name}`);
+  if (story.model) bits.push(`模型：${story.provider} · ${story.model}`);
+  if (story.seconds) bits.push(`耗时 ${story.seconds}s`);
+  bits.push(`引用 ${(story.citations || []).length} 条史料`);
+  if (story.reason) bits.push(story.reason);
+  if (entry && entry.source_note) bits.push(`出处待核：${entry.source_note}`);
+  $("#storyMeta").textContent = bits.join("　|　");
+
+  $("#storyBox").classList.remove("hidden");
+}
+
+async function kbRecognize() {
+  if (!state.dataUrl) { toast("先上传一张照片", true); return; }
+  const btn = $("#recognizeBtn");
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "识别中…";
+  $("#recognizeHint").textContent = "首次识别会加载 CLIP 模型，可能需要十几秒";
+  try {
+    const r = await apiFetch("/api/kb/recognize", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: state.dataUrl, top_k: 3 }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "识别失败");
+    if (!d.available) {
+      $("#candidates").classList.add("hidden");
+      $("#recognizeHint").textContent =
+        "识别不可用：" + (d.reason || "") + "　—— 请用下面的检索 / 选择";
+      toast("CLIP 不可用，已改用检索", true);
+      return;
+    }
+    const cands = d.candidates || [];
+    $("#candidates").innerHTML = cands.map((c, i) =>
+      `<span class="cand" data-id="${c.id}">${i + 1}. <b>${escapeHtml(c.name)}</b> ` +
+      `${(c.score * 100).toFixed(1)}%</span>`).join("");
+    $("#candidates").classList.remove("hidden");
+    $$("#candidates .cand").forEach(el => {
+      el.onclick = () => kbStory({ entryId: el.dataset.id });
+    });
+    $("#recognizeHint").textContent =
+      "点候选生成讲解　·　模型：" + (d.model || "");
+  } catch (e) {
+    $("#recognizeHint").textContent = "识别失败：" + e.message;
+    toast("识别失败：" + e.message, true);
+  } finally {
+    btn.disabled = !state.dataUrl;
+    btn.textContent = old;
+  }
+}
+
+function bindKb() {
+  $("#kbSearchBtn").addEventListener("click", kbSearch);
+  $("#kbQuery").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") kbSearch();
+  });
+  $("#kbSelect").addEventListener("change", (e) => {
+    if (e.target.value) kbStory({ entryId: e.target.value });
+  });
+  $("#recognizeBtn").addEventListener("click", kbRecognize);
+  $("#regenBtn").addEventListener("click", () => {
+    if (kbState.last) kbStory(kbState.last);
+  });
+  $("#copyStory").addEventListener("click", async () => {
+    const text = $("#storyText").textContent || "";
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("讲解已复制");
+    } catch (e) {
+      toast("浏览器不允许复制，手动选中吧", true);
+    }
+  });
+}
+
+/* ---------------- 启动 ---------------- */
+(async function init() {
+  bindUI();
+  bindCompare();
+  bindTokenBar();
+  bindKb();
+  await loadStatus();
+  await loadKbStatus();
+})();
+</script>
+</body>
+</html>
